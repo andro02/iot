@@ -9,7 +9,7 @@ def dus1_callback(distance):
 def run_dus1(settings, threads, stop_event):
     if settings['simulated']:
         print("Starting DUS1 simulator.")
-        t = threading.Thread(target=run_dus1_simulator, args=(3, dus1_callback, stop_event, settings['scan_delay']))
+        t = threading.Thread(target=run_dus1_simulator, args=(settings['scan_delay'], dus1_callback, stop_event))
         t.start()
         threads.append(t)
     else:
