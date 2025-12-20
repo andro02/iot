@@ -1,0 +1,5 @@
+{
+    "DS1": { "pin": 17, "simulated": true, "bouncetime": 100, "pull": "up" },
+    "DL": { "pin": 18, "simulated": true },
+    "DMS": { "R1": 25, "R2": 8, "R3": 7, "R4": 1, "C1": 12, "C2": 16, "C3": 20, "C4": 21, "simulated": true, "scan_delay": 0.2 }
+}
