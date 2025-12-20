@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*.swp
+*.egg
+*.egg-info/
+
+# VS Code
+.vscode/
