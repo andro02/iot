@@ -3,7 +3,10 @@ import time
 from settings import load_settings
 from components.ds1 import run_ds1
 from components.dms import run_dms
+from components.dus1 import run_dus1
+from components.dpir1 import run_dpir1
 from components.dl import run_dl
+from components.db import run_db
 
 try:
     import RPi.GPIO as GPIO
@@ -20,7 +23,10 @@ if __name__ == "__main__":
     try:
         run_ds1(settings['DS1'], threads, stop_event)
         run_dms(settings['DMS'], threads, stop_event)
+        run_dus1(settings['DUS1'], threads, stop_event)
+        run_dpir1(settings['DPIR1'], threads, stop_event)
         run_dl(settings['DL'], threads, stop_event)
+        run_db(settings['DL'], threads, stop_event)
 
         while(True):
             time.sleep(1)
