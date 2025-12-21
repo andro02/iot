@@ -3,6 +3,7 @@ import time
 from settings import load_settings
 from components.ds1 import run_ds1
 from components.dms import run_dms
+from components.dl import run_dl
 
 try:
     import RPi.GPIO as GPIO
@@ -19,23 +20,10 @@ if __name__ == "__main__":
     try:
         run_ds1(settings['DS1'], threads, stop_event)
         run_dms(settings['DMS'], threads, stop_event)
+        run_dl(settings['DL'], threads, stop_event)
 
-        if settings['DL']['simulated']:
-            from simulators.dl import DL
-        else:
-            from actuators.dl import DL
-        
-        door_light = DL(settings['DL']['pin'])
-
-        print("Senzori (DS1 i DMS) rade u pozadini...")
-        print("Glavna petlja testira DL (blinkanje)...\n")
-        print("Pritisni CTRL+C za izlaz.\n")
-
-        while True:
-            door_light.turn_on()
-            time.sleep(2)
-            door_light.turn_off()
-            time.sleep(2)
+        while(True):
+            time.sleep(1)
 
     except KeyboardInterrupt:
         print('Stopping app')
