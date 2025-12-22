@@ -26,7 +26,7 @@ if __name__ == "__main__":
         run_dus1(settings['DUS1'], threads, stop_event)
         run_dpir1(settings['DPIR1'], threads, stop_event)
         run_dl(settings['DL'], threads, stop_event)
-        run_db(settings['DL'], threads, stop_event)
+        run_db(settings['DB'], threads, stop_event)
 
         while(True):
             time.sleep(1)
