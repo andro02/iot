@@ -72,6 +72,109 @@ def create_payload(sensor_settings, measurement, value):
     return payload
 
 
+# Callbacks
+def ds1_callback(val):
+    # Logika za senzor vrata
+    sensor_config = settings['DS1']
+    payload = create_payload(sensor_config, "Door_Status", val) # 1 ili 0
+    
+    # MQTT Topic: "Senzori/DoorSensor1" (primer)
+    topic = "Sensors/DS1"
+    
+    with counter_lock:
+        # Dodajemo u batch u formatu koji paho-mqtt ocekuje: (topic, payload, qos, retain)
+        batch.append((topic, json.dumps(payload), 0, True))
+        global publish_data_counter
+        publish_data_counter += 1
+    
+    # Ako smo napunili batch, budimo publisher thread
+    if publish_data_counter >= publish_data_limit:
+        publish_event.set()
+        
+    # Ispis u konzolu za debug (opciono)
+    print(f"[DS1] Detected: {val}")
+
+def dms_callback(key):
+    sensor_config = settings['DMS']
+    payload = create_payload(sensor_config, "Key_Pressed", key)
+    topic = "Sensors/DMS"
+    
+    with counter_lock:
+        batch.append((topic, json.dumps(payload), 0, True))
+        global publish_data_counter
+        publish_data_counter += 1
+        
+    if publish_data_counter >= publish_data_limit:
+        publish_event.set()
+    
+    print(f"[DMS] Key: {key}")
+
+# Senzor pokreta detektuje pokret (uvek salje 1 kad detektuje)
+def dpir1_callback():
+    sensor_config = settings['DPIR1']
+    payload = create_payload(sensor_config, "Motion", 1)
+    topic = "Sensors/DPIR1"
+    
+    with counter_lock:
+        batch.append((topic, json.dumps(payload), 0, True))
+        global publish_data_counter
+        publish_data_counter += 1
+    
+    if publish_data_counter >= publish_data_limit:
+        publish_event.set()
+        
+    print(f"[DPIR1] Motion Detected")
+
+def dus1_callback(distance):
+    # Ultrazvucni senzor meri distancu
+    sensor_config = settings['DUS1']
+    payload = create_payload(sensor_config, "Distance", distance)
+    topic = "Sensors/DUS1"
+    
+    with counter_lock:
+        batch.append((topic, json.dumps(payload), 0, True))
+        global publish_data_counter
+        publish_data_counter += 1
+
+    if publish_data_counter >= publish_data_limit:
+        publish_event.set()
+        
+    print(f"[DUS1] Distance: {distance} cm")
+
+def dl_callback(state):
+    sensor_config = settings['DL']
+    val = 1 if state else 0
+    payload = create_payload(sensor_config, "Light_Status", val)
+    topic = "Actuators/DL"
+    
+    with counter_lock:
+        batch.append((topic, json.dumps(payload), 0, True))
+        global publish_data_counter
+        publish_data_counter += 1
+        
+    if publish_data_counter >= publish_data_limit:
+        publish_event.set()
+        
+    status = "ON" if state else "OFF"
+    print(f"[DL] Light is {status}")
+
+def db_callback(state):
+    sensor_config = settings['DB']
+    val = 1 if state else 0
+    payload = create_payload(sensor_config, "Buzzer_Status", val)
+    topic = "Actuators/DB"
+    
+    with counter_lock:
+        batch.append((topic, json.dumps(payload), 0, True))
+        global publish_data_counter
+        publish_data_counter += 1
+        
+    if publish_data_counter >= publish_data_limit:
+        publish_event.set()
+        
+    status = "BUZZ" if state else "SILENCE"
+    print(f"[DB] Buzzer is {status}")
+
 if __name__ == "__main__":
     print('Starting app')
     settings = load_settings()
@@ -86,7 +189,14 @@ if __name__ == "__main__":
     print("Publisher thread started.")
 
     try:
-
+        run_ds1(settings['DS1'], threads, stop_event, ds1_callback)
+        run_dms(settings['DMS'], threads, stop_event, dms_callback)
+        run_dus1(settings['DUS1'], threads, stop_event, dus1_callback)
+        run_dpir1(settings['DPIR1'], threads, stop_event, dpir1_callback)
+        run_dl(settings['DL'], threads, stop_event, dl_callback)
+        run_db(settings['DB'], threads, stop_event, db_callback)
+        
+        print("Svi senzori pokrenuti. Pritisni CTRL+C za izlaz.")
         while(True):
             time.sleep(1)
 
