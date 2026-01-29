@@ -223,6 +223,8 @@ if __name__ == "__main__":
             elif command == 'x':
                 print("Stopping app...")
                 stop_event.set()
+                for t in threads:
+                    t.join()
                 break
 
     except KeyboardInterrupt:
