@@ -1,29 +1,7 @@
-import keyboard
-
 def run_dl_simulator(callback, stop_event):
-      is_on = False
-
-      def on_press(e):
-            nonlocal is_on
-            if e.event_type == keyboard.KEY_DOWN:
-                  is_on = not is_on
-                  callback(is_on)
-
-      hook = keyboard.hook_key('l', on_press, suppress=True)      
-      stop_event.wait()
-      keyboard.unhook(hook)
-
-
-
-
-
-
-
-
-
-
-
-
+    # Simulator samo čeka – nema input-a ovde
+    while not stop_event.is_set():
+        pass
 
 # import time
 

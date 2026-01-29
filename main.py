@@ -193,12 +193,37 @@ if __name__ == "__main__":
         run_dms(settings['DMS'], threads, stop_event, dms_callback)
         run_dus1(settings['DUS1'], threads, stop_event, dus1_callback)
         run_dpir1(settings['DPIR1'], threads, stop_event, dpir1_callback)
-        run_dl(settings['DL'], threads, stop_event, dl_callback)
-        run_db(settings['DB'], threads, stop_event, db_callback)
-        
+
+        dl_device = run_dl(settings['DL'], threads, stop_event, dl_callback)
+        db_device = run_db(settings['DB'], threads, stop_event, db_callback)
+        dl_on = False
+        db_on = False
+
+        print("\n---- KOMANDE -----")
+        print(" 'l' -> Upali/Ugasi svetlo")
+        print(" 'b' -> Upali/Ugasi zujalicu")
+        print(" 'x' -> Izlaz")
         print("Svi senzori pokrenuti. Pritisni CTRL+C za izlaz.")
-        while(True):
-            time.sleep(1)
+        
+        while True:
+            command = input("Unesi komandu: ").strip().lower()
+
+            if command == 'l':
+                dl_on = not dl_on
+                dl_callback(dl_on)
+                if not settings['DL']['simulated'] and dl_device:
+                    if dl_on: dl_device.turn_on()
+                    else: dl_device.turn_off()
+            elif command == 'b':
+                db_on = not db_on
+                db_callback(db_on)
+                if not settings['DB']['simulated'] and db_device:
+                    if db_on: db_device.turn_on()
+                    else: db_device.turn_off()
+            elif command == 'x':
+                print("Stopping app...")
+                stop_event.set()
+                break
 
     except KeyboardInterrupt:
         print('Stopping app')
