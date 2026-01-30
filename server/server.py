@@ -10,7 +10,7 @@ app = Flask(__name__)
 token = "B8HDBR5Sh9cCibUUGyUAM2rDL4ajESUs_UyUHpRp52OT3mL1IriRtRCD2cnnix-09BGs1_OU9xv9HMNXnWDSGg=="
 org = "FTN"
 url = "http://localhost:8086"
-bucket = "rasbpi1"
+bucket = "iot_db"
 influxdb_client = InfluxDBClient(url=url, token=token, org=org)
 
 
