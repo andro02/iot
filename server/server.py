@@ -33,13 +33,19 @@ mqtt_client.on_message = lambda client, userdata, msg: save_to_db(json.loads(msg
 
 def save_to_db(data):
     write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
-    point = (
-        Point(data["measurement"])
-        .tag("simulated", data["simulated"])
-        .tag("runs_on", data["runs_on"])
+    point = Point(data["measurement"]) \
+        .tag("simulated", data["simulated"]) \
+        .tag("runs_on", data["runs_on"]) \
         .tag("name", data["name"])
-        .field("measurement", data["value"])
-    )
+
+    # Ako je vrednost broj, konvertuj, inače ostavi kao string
+    try:
+        val = float(data["value"])
+        point = point.field("measurement", val)
+    except ValueError:
+        # nije broj -> piši kao string
+        point = point.field("measurement_str", str(data["value"]))
+
     write_api.write(bucket=bucket, org=org, record=point)
 
 
