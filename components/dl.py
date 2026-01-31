@@ -1,12 +1,19 @@
-from actuators.dl import DL
+import threading
+from simulators.dl import run_dl_simulator
 
 def run_dl(settings, threads, stop_event, callback):
     if settings['simulated']:
-        pass
+        print("Starting DL simulator.")
+        dl_thread = threading.Thread(
+            target=run_dl_simulator,
+            args=(callback, stop_event),
+            daemon=True
+        )
+        dl_thread.start()
+        threads.append(dl_thread)
+        return None
     else:
-        print("Starting DL Real Loop (Press 'L' to toggle)")
-        
-        # Ovde prosledjujemo callback klasi/funkciji za pravi hardver
+        from actuators.dl import DL
+        print("Starting DL real device.")
         dl = DL(settings['pin'], callback)
         return dl
-    return None

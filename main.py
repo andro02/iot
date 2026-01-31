@@ -1,5 +1,6 @@
 import threading
 import time
+import sys
 import json
 import paho.mqtt.publish as publish
 from settings import load_settings
@@ -28,13 +29,47 @@ counter_lock = threading.Lock()
 publish_data_limit = 5
 publish_data_counter = 0
 
-def publisher_task(event, batch_data):
+def input_thread(stop_event, dl_callback, db_callback):
+    dl_on = False
+    db_on = False
+
+    print("\n---- KOMANDE -----")
+    print(" 'l' -> Upali/Ugasi svetlo")
+    print(" 'b' -> Upali/Ugasi zujalicu")
+    print(" 'x' -> Izlaz")
+    print("Svi senzori pokrenuti. Pritisni 'x' za izlaz.\n")
+
+    while not stop_event.is_set():
+        try:
+            key = sys.stdin.readline().strip().lower()
+        except KeyboardInterrupt:
+            print("\nStopping via Ctrl+C")
+            stop_event.set()
+            break
+
+        if not key:
+            continue
+
+        if key == 'l':
+            dl_on = not dl_on
+            dl_callback(dl_on)
+        elif key == 'b':
+            db_on = not db_on
+            db_callback(db_on)
+        elif key == 'x':
+            print("Stopping app...")
+            stop_event.set()
+            break
+        else:
+            print(f"Nepoznata komanda: {key}")
+
+def publisher_task(event, batch_data, stop_event):
     """
     Ovo je DAEMON nit. Ona radi u pozadini i salje podatke na MQTT.
     Salje ako se nakupi dovoljno podataka (publish_data_limit) ILI ako prodje vreme.
     """
     global publish_data_counter, publish_data_limit
-    while True:
+    while not stop_event.is_set():
         # Cekamo da se napuni lista ili 10 sekundi (timeout)
         event.wait(timeout=10)
         
@@ -182,53 +217,30 @@ if __name__ == "__main__":
     stop_event = threading.Event()
 
     # Pokretanje Publisher Thread-a (Daemon)
-    publisher_thread = threading.Thread(target=publisher_task, args=(publish_event, batch))
+    publisher_thread = threading.Thread(target=publisher_task, args=(publish_event, batch, stop_event))
     publisher_thread.daemon = True # Ovo znaci da ce se ugasiti kad se ugasi glavni program
     publisher_thread.start()
     threads.append(publisher_thread)
     print("Publisher thread started.")
 
+    run_ds1(settings['DS1'], threads, stop_event, ds1_callback)
+    run_dms(settings['DMS'], threads, stop_event, dms_callback)
+    run_dus1(settings['DUS1'], threads, stop_event, dus1_callback)
+    run_dpir1(settings['DPIR1'], threads, stop_event, dpir1_callback)
+
+    dl_device = run_dl(settings['DL'], threads, stop_event, dl_callback)
+    db_device = run_db(settings['DB'], threads, stop_event, db_callback)
+
+    input_thread = threading.Thread(target=input_thread, args=(stop_event, dl_callback, db_callback))
+    input_thread.daemon = True
+    input_thread.start()
+    threads.append(input_thread)
+    
     try:
-        run_ds1(settings['DS1'], threads, stop_event, ds1_callback)
-        run_dms(settings['DMS'], threads, stop_event, dms_callback)
-        run_dus1(settings['DUS1'], threads, stop_event, dus1_callback)
-        run_dpir1(settings['DPIR1'], threads, stop_event, dpir1_callback)
-
-        dl_device = run_dl(settings['DL'], threads, stop_event, dl_callback)
-        db_device = run_db(settings['DB'], threads, stop_event, db_callback)
-        dl_on = False
-        db_on = False
-
-        print("\n---- KOMANDE -----")
-        print(" 'l' -> Upali/Ugasi svetlo")
-        print(" 'b' -> Upali/Ugasi zujalicu")
-        print(" 'x' -> Izlaz")
-        print("Svi senzori pokrenuti. Pritisni CTRL+C za izlaz.")
-        
-        while True:
-            command = input("Unesi komandu: ").strip().lower()
-
-            if command == 'l':
-                dl_on = not dl_on
-                dl_callback(dl_on)
-                if not settings['DL']['simulated'] and dl_device:
-                    if dl_on: dl_device.turn_on()
-                    else: dl_device.turn_off()
-            elif command == 'b':
-                db_on = not db_on
-                db_callback(db_on)
-                if not settings['DB']['simulated'] and db_device:
-                    if db_on: db_device.turn_on()
-                    else: db_device.turn_off()
-            elif command == 'x':
-                print("Stopping app...")
-                stop_event.set()
-                for t in threads:
-                    t.join()
-                break
-
+        stop_event.wait()  # Main thread čeka dok se ne setuje stop_event
     except KeyboardInterrupt:
-        print('Stopping app')
         stop_event.set()
+    finally:
         for t in threads:
             t.join()
+        print("App stopped.")
