@@ -64,7 +64,7 @@ def create_payload(sensor_settings, measurement, value):
     """ Pomocna funkcija za kreiranje JSON payload-a po specifikaciji """
     payload = {
         "measurement": measurement,
-        "value": float(value),
+        "value": value,
         "simulated": sensor_settings['simulated'],
         "runs_on": sensor_settings['runs_on'],
         "name": sensor_settings['name']

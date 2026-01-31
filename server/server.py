@@ -37,14 +37,23 @@ def save_to_db(data):
         .tag("simulated", data["simulated"]) \
         .tag("runs_on", data["runs_on"]) \
         .tag("name", data["name"])
+    
+    measurement_name = data["measurement"]
+
+    # LISTA MERENJA KOJA UVEK MORAJU BITI TEKST
+    # Za sad samo DMS
+    text_measurements = ["Key_Pressed"]
+
+    if measurement_name in text_measurements: # Ako je tastatura, cuvaj kao string
+         point = point.field("value_str", str(data["value"]))
 
     # Ako je vrednost broj, konvertuj, inače ostavi kao string
     try:
         val = float(data["value"])
-        point = point.field("measurement", val)
+        point = point.field("value", val)
     except ValueError:
         # nije broj -> piši kao string
-        point = point.field("measurement_str", str(data["value"]))
+        point = point.field("value_str", str(data["value"]))
 
     write_api.write(bucket=bucket, org=org, record=point)
 
@@ -93,4 +102,4 @@ def retrieve_aggregate_data():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
