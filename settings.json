@@ -49,5 +49,101 @@
         "scan_delay": 2,
         "name":"Door Ultrasonic Sensor 1",
         "runs_on": "PI1"
+    },
+    "WEBC": {
+        "simulated": true,
+        "name": "Door Web Camera",
+        "runs_on": "PI1"
+    },
+    
+    "DS2": {
+        "pin": 5,
+        "simulated": true,
+        "bouncetime": 100,
+        "pull": "up",
+        "name": "Door Sensor 2",
+        "runs_on": "PI2"
+    },
+    "DUS2": {
+        "pin_trig": 6,
+        "pin_echo": 12,
+        "simulated": true,
+        "scan_delay": 2,
+        "name": "Door Ultrasonic Sensor 2",
+        "runs_on": "PI2"
+    },
+    "DPIR2": {
+        "pin": 13,
+        "simulated": true,
+        "name": "Door Motion Sensor 2",
+        "runs_on": "PI2"
+    },
+    "4SD": {
+        "segments": [11, 4, 23, 8, 7, 10, 18, 25],
+        "digits": [22, 27, 17, 24],
+        "simulated": true,
+        "name": "Kitchen Timer",
+        "runs_on": "PI2"
+    },
+    "BTN": {
+        "pin": 19,
+        "simulated": true,
+        "bouncetime": 200,
+        "pull": "up",
+        "name": "Kitchen Button",
+        "runs_on": "PI2"
+    },
+    "DHT3": {
+        "pin": 20,
+        "simulated": true,
+        "name": "Kitchen DHT",
+        "runs_on": "PI2"
+    },
+    "GSG": {
+        "i2c_bus": 1,
+        "address": "0x68",
+        "simulated": true,
+        "name": "Gyroscope",
+        "runs_on": "PI2"
+    },
+    
+    "DHT1": {
+        "pin": 4,
+        "simulated": true,
+        "name": "Bedroom DHT",
+        "runs_on": "PI3"
+    },
+    "DHT2": {
+        "pin": 5,
+        "simulated": true,
+        "name": "Master Bedroom DHT",
+        "runs_on": "PI3"
+    },
+    "IR": {
+        "pin": 17,
+        "simulated": true,
+        "name": "Bedroom Infrared",
+        "runs_on": "PI3"
+    },
+    "BRGB": {
+        "pin_r": 12,
+        "pin_g": 13,
+        "pin_b": 19,
+        "simulated": true,
+        "name": "Bedroom RGB",
+        "runs_on": "PI3"
+    },
+    "LCD": {
+        "i2c_bus": 1,
+        "address": "0x27",
+        "simulated": true,
+        "name": "LR Display",
+        "runs_on": "PI3"
+    },
+    "DPIR3": {
+        "pin": 27,
+        "simulated": true,
+        "name": "LR Motion Sensor",
+        "runs_on": "PI3"
     }
 }
