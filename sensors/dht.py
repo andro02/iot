@@ -1,5 +1,8 @@
 from sensors.LA_DHT import DHT
-import RPi.GPIO as GPIO
+try:
+    import RPi.GPIO as GPIO
+except:
+    pass
 
 class DHTSensor(object):
     def init(self, settings):

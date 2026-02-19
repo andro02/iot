@@ -51,7 +51,6 @@ def save_to_db(data):
     measurement_name = data["measurement"]
 
     # LISTA MERENJA KOJA UVEK MORAJU BITI TEKST
-    # Za sad samo DMS
     text_measurements = [
         "Key_Pressed",   # Tastatura (DMS)
         "IR_Remote",     # Daljinski (IR)
@@ -61,27 +60,15 @@ def save_to_db(data):
         "Rotation"       # Ziroskop [x, y, z]
     ]
 
-    # if measurement_name in text_measurements: # Ako je tastatura, cuvaj kao string
-    #      point = point.field("value_str", str(data["value"]))
-
-    # # Ako je vrednost broj, konvertuj, inače ostavi kao string
-    # try:
-    #     val = float(data["value"])
-    #     point = point.field("value", val)
-    # except ValueError:
-    #     # nije broj -> piši kao string
-    #     point = point.field("value_str", str(data["value"]))
-
     if measurement_name in text_measurements: 
-        # Znamo da je ovo tekst, cuvaj ga iskljucivo u value_str
         point = point.field("value_str", str(data["value"]))
     else:
-        # Za ostale pokusaj da konvertujes u broj (Temperatura, Distanca, Motion 1/0...)
+        # Za ostale pokusaj da konvertujes u broj
         try:
             val = float(data["value"])
             point = point.field("value", val)
         except (ValueError, TypeError):
-            # Sigurnosna mreza ako ipak stigne neki cudan tekst
+            # Sigurnosna mreza
             point = point.field("value_str", str(data["value"]))
 
     write_api.write(bucket=bucket, org=org, record=point)
