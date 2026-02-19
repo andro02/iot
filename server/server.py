@@ -21,11 +21,21 @@ mqtt_client.loop_start()
 
 def on_connect(client, userdata, flags, rc):
     client.subscribe("Sensors/DS1")
+    client.subscribe("Sensors/DS2")
+    client.subscribe("Sensors/BTN")
     client.subscribe("Sensors/DMS")
     client.subscribe("Sensors/DUS1")
+    client.subscribe("Sensors/DUS2")
     client.subscribe("Sensors/DPIR1")
+    client.subscribe("Sensors/DPIR2")
+    client.subscribe("Sensors/DPIR3")
+    client.subscribe("Sensors/DHT")
+    client.subscribe("Sensors/Gyro")
     client.subscribe("Actuators/DL")
     client.subscribe("Actuators/DB")
+    client.subscribe("Actuators/BRGB")
+    client.subscribe("Actuators/LCD")
+    client.subscribe("Sensors/BIR")
 
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = lambda client, userdata, msg: save_to_db(json.loads(msg.payload.decode('utf-8')))
@@ -42,18 +52,37 @@ def save_to_db(data):
 
     # LISTA MERENJA KOJA UVEK MORAJU BITI TEKST
     # Za sad samo DMS
-    text_measurements = ["Key_Pressed"]
+    text_measurements = [
+        "Key_Pressed",   # Tastatura (DMS)
+        "IR_Remote",     # Daljinski (IR)
+        "RGB_Color",     # Boja svetla (BRGB)
+        "LCD_Text",      # Tekst ekrana (LCD)
+        "Acceleration",  # Ziroskop [x, y, z]
+        "Rotation"       # Ziroskop [x, y, z]
+    ]
 
-    if measurement_name in text_measurements: # Ako je tastatura, cuvaj kao string
-         point = point.field("value_str", str(data["value"]))
+    # if measurement_name in text_measurements: # Ako je tastatura, cuvaj kao string
+    #      point = point.field("value_str", str(data["value"]))
 
-    # Ako je vrednost broj, konvertuj, inače ostavi kao string
-    try:
-        val = float(data["value"])
-        point = point.field("value", val)
-    except ValueError:
-        # nije broj -> piši kao string
+    # # Ako je vrednost broj, konvertuj, inače ostavi kao string
+    # try:
+    #     val = float(data["value"])
+    #     point = point.field("value", val)
+    # except ValueError:
+    #     # nije broj -> piši kao string
+    #     point = point.field("value_str", str(data["value"]))
+
+    if measurement_name in text_measurements: 
+        # Znamo da je ovo tekst, cuvaj ga iskljucivo u value_str
         point = point.field("value_str", str(data["value"]))
+    else:
+        # Za ostale pokusaj da konvertujes u broj (Temperatura, Distanca, Motion 1/0...)
+        try:
+            val = float(data["value"])
+            point = point.field("value", val)
+        except (ValueError, TypeError):
+            # Sigurnosna mreza ako ipak stigne neki cudan tekst
+            point = point.field("value_str", str(data["value"]))
 
     write_api.write(bucket=bucket, org=org, record=point)
 
