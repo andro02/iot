@@ -5,7 +5,7 @@ except:
 import time
 
 class DUS1(object):
-    def init(self, trig_pin, echo_pin, scan_delay, callback):
+    def __init__(self, trig_pin, echo_pin, scan_delay, callback):
         self.trig_pin = trig_pin
         self.echo_pin = echo_pin
         self.scan_delay = scan_delay
