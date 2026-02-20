@@ -15,5 +15,5 @@ def run_db(settings, threads, stop_event, callback):
     else:
         from actuators.db import DB
         print("Starting DB real device.")
-        db = DB(settings['pin'], callback)
+        db = DB(settings)
         return db
