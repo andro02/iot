@@ -28,7 +28,7 @@ def create_payload(cfg, measurement, value):
 def add_to_batch(topic, payload):
     global publish_data_counter
     with counter_lock:
-        batch.append((topic, json.dumps(payload), 0, True))
+        batch.append((topic, json.dumps(payload), 0, False))
         publish_data_counter += 1
     if publish_data_counter >= publish_data_limit: publish_event.set()
 
@@ -127,12 +127,15 @@ if __name__ == "__main__":
     run_dpir1(settings['DPIR3'], threads, stop_event, dpir3_callback)
 
     try:
-        print("PI3 pokrenut. Pritisni CTRL+C za izlaz.")
-        while True: 
+        while not stop_event.is_set():
             time.sleep(1)
     except KeyboardInterrupt:
         print('Stopping PI3...')
         stop_event.set()
-        for t in threads: 
+    finally:
+        for t in threads:
             t.join()
+
         mqtt_client.loop_stop()
+        mqtt_client.disconnect()
+        print("PI3 stopped.")
