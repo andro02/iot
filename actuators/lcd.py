@@ -2,7 +2,7 @@ from actuators.PCF8574 import PCF8574_GPIO
 from actuators.Adafruit_LCD1602 import Adafruit_CharLCD
 
 class LCD:
-    def init(self, settings):
+    def __init__(self, settings):
         self.address = int(settings['address'], 16) # npr. 0x27 pretvara u broj
         try:
             # Inicijalizacija GPIO adaptera (PCF8574)

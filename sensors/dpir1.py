@@ -4,7 +4,7 @@ except:
     pass
 
 class DPIR1(object):
-    def init(self, pin, callback):
+    def __init__(self, pin, callback):
         self.pin = pin
         self.callback = callback
         GPIO.setup(self.pin, GPIO.IN)

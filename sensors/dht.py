@@ -5,7 +5,7 @@ except:
     pass
 
 class DHTSensor(object):
-    def init(self, settings):
+    def __init__(self, settings):
         self.pin = settings['pin']
         self.dht = DHT(self.pin)
         self.dht_lib = DHT  # Referenca na klasu zbog konstanti (DHTLIB_OK itd.)
