@@ -60,6 +60,9 @@ def dpir3_callback():
     print(f"[DPIR3] Motion Detected")
 
 def dht_callback(humidity, temperature, event, cfg):
+    if humidity is None or temperature is None:
+        return
+    
     add_to_batch("Sensors/DHT", 
                  create_payload(cfg, "Humidity", humidity))
     add_to_batch("Sensors/DHT", 

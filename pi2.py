@@ -100,6 +100,9 @@ def dpir2_callback():
 
 def dht_callback(humidity, temperature, event, cfg):
     # Slanje vlaznosti
+    if humidity is None or temperature is None:
+        return
+    
     add_to_batch("Sensors/DHT", 
                  create_payload(cfg, "Humidity", humidity))
     # Slanje temperature
