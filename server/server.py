@@ -1,4 +1,6 @@
 from flask import Flask, jsonify, request
+from flask import render_template # Opciono, ako ces servirati HTML direktno
+from flask_cors import CORS # Ako HTML otvaras kao obican fajl, treba ti CORS. Dodaj CORS(app) gore ispod app = Flask(__name__)
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 import paho.mqtt.client as mqtt
@@ -8,6 +10,7 @@ import time
 import ast
 
 app = Flask(__name__)
+CORS(app) #?????
 
 # --- INFLUXDB SETUP ---
 token = "B8HDBR5Sh9cCibUUGyUAM2rDL4ajESUs_UyUHpRp52OT3mL1IriRtRCD2cnnix-09BGs1_OU9xv9HMNXnWDSGg=="
@@ -38,7 +41,14 @@ SYSTEM_STATE = {
 
     # tajmeri za bezbednost
     "pin_clear_timer": None,
-    "intrusion_timer": None
+    "intrusion_timer": None,
+
+    # za LCD i stopericu
+    "dht_readings": {},
+    "stopwatch_time": 0,
+    "stopwatch_running": False,
+    "stopwatch_blinking": False,
+    "btn_add_seconds": 10
 }
 
 SECRET_PIN = "1111"
@@ -180,6 +190,49 @@ def turn_on_dl_for_10s():
     dl_timer = threading.Timer(10.0, turn_off)
     dl_timer.start()
 
+# --- LCD ROTACIJA (Pozadinski zadatak) ---
+def start_lcd_rotation():
+    def rotation_loop():
+        current_index = 0
+        while True:
+            time.sleep(5) # Smenjuje prikaz na svakih 5 sekundi
+            keys = list(SYSTEM_STATE["dht_readings"].keys())
+            if not keys:
+                continue
+            
+            # Kruzimo kroz dostupne DHT senzore
+            current_index = (current_index + 1) % len(keys)
+            sensor_name = keys[current_index]
+            data = SYSTEM_STATE["dht_readings"][sensor_name]
+            
+            # Formatiranje za 16x2 ekran
+            text = f"{sensor_name[:16]}\nT:{data.get('temp', 0):.1f}C H:{data.get('hum', 0):.1f}%"
+            mqtt_client.publish("Commands/PI3/LCD", json.dumps({"command": "write", "text": text}))
+
+    threading.Thread(target=rotation_loop, daemon=True).start()
+
+# --- STOPERICA LOGIKA ---
+def run_stopwatch_tick():
+    if SYSTEM_STATE["stopwatch_running"] and SYSTEM_STATE["stopwatch_time"] > 0:
+        SYSTEM_STATE["stopwatch_time"] -= 1
+        
+        mins = SYSTEM_STATE["stopwatch_time"] // 60
+        secs = SYSTEM_STATE["stopwatch_time"] % 60
+        time_str = f"{mins:02d}:{secs:02d}"
+        
+        # Saljemo komandu na PI2 za 4SD
+        mqtt_client.publish("Commands/PI2/4SD", json.dumps({"command": "show", "text": time_str}))
+        
+        if SYSTEM_STATE["stopwatch_time"] == 0:
+            SYSTEM_STATE["stopwatch_running"] = False
+            SYSTEM_STATE["stopwatch_blinking"] = True
+            mqtt_client.publish("Commands/PI2/4SD", json.dumps({"command": "blink"}))
+        else:
+            threading.Timer(1.0, run_stopwatch_tick).start()
+
+# Pokrecemo rotaciju LCD-a prilikom pokretanja servera
+start_lcd_rotation()
+
 # --- GLAVNA LOGIKA ---
 def process_logic(topic, data):
     """
@@ -290,7 +343,7 @@ def process_logic(topic, data):
                     deactivate_alarm()
 
 
-    #------------------------------------------------------------
+    # ///////////////////////////////////////////////
     # ==========================================
     # LOGIKA ZA NULA LJUDI U KUCI (svi DPIR senzori pokreta)
     # ==========================================
@@ -323,6 +376,39 @@ def process_logic(topic, data):
 
         except Exception as e:
             print(f"[GYRO ERROR] {e}")
+
+    # ///////////////////////////////////////////////
+    # ==========================================
+    # LOGIKA ZA CUVANJE DHT PODATAKA (Za LCD)
+    # ==========================================
+    if measurement in ["Temperature", "Humidity"]:
+        sensor_name = data.get("name", "Unknown DHT")
+        if sensor_name not in SYSTEM_STATE["dht_readings"]:
+            SYSTEM_STATE["dht_readings"][sensor_name] = {"temp": 0.0, "hum": 0.0}
+            
+        if measurement == "Temperature":
+            SYSTEM_STATE["dht_readings"][sensor_name]["temp"] = value
+        else:
+            SYSTEM_STATE["dht_readings"][sensor_name]["hum"] = value
+
+    # ==========================================
+    # LOGIKA ZA STOPERICU I DUGME (BTN)
+    # ==========================================
+    if topic == "Sensors/BTN" and measurement == "Button_Pressed" and value == 1:
+        if SYSTEM_STATE["stopwatch_blinking"]:
+            # zaustavi treperenje kada istekne vreme
+            SYSTEM_STATE["stopwatch_blinking"] = False
+            SYSTEM_STATE["stopwatch_time"] = 0
+            mqtt_client.publish("Commands/PI2/4SD", json.dumps({"command": "clear"}))
+            print("[STOPERICA] Treperenje zaustavljeno.")
+        else:
+            # Dodaj N sekundi i pokreni ako vec nije pokrenuto
+            SYSTEM_STATE["stopwatch_time"] += SYSTEM_STATE["btn_add_seconds"]
+            print(f"[STOPERICA] Dodato {SYSTEM_STATE['btn_add_seconds']}s. Ukupno: {SYSTEM_STATE['stopwatch_time']}s")
+            
+            if not SYSTEM_STATE["stopwatch_running"]:
+                SYSTEM_STATE["stopwatch_running"] = True
+                run_stopwatch_tick()
 
 def save_to_db(data):
     write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)

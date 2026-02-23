@@ -117,9 +117,17 @@ def on_message(client, userdata, msg):
         payload = json.loads(msg.payload.decode('utf-8'))
         command = payload.get("command")
         
-        # Ovde cemo kasnije dodati logiku za 4SD stopericu
         if msg.topic == "Commands/PI2/4SD":
-            print(f"[4SD Command Received]: {command}")
+            if command == "show":
+                text = payload.get("text", "00:00")
+                if four_sd_device:
+                    four_sd_device.display_text(text)
+            elif command == "blink":
+                if four_sd_device:
+                    four_sd_device.blink("00:00")
+            elif command == "clear":
+                if four_sd_device:
+                    four_sd_device.clear()
             
     except Exception as e:
         print(f"Error handling MQTT command: {e}")

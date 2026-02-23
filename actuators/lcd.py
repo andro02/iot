@@ -14,6 +14,9 @@ class LCD:
             except:
                 print('I2C Address Error for LCD!')
                 return
+            
+        # uklj pozadinsko osvetljenje (backlight)
+        self.mcp.output(3, 1)
 
         # Inicijalizacija LCD-a koristeci adapter
         self.lcd = Adafruit_CharLCD(pin_rs=0, pin_e=2, pins_db=[4,5,6,7], GPIO=self.mcp)
