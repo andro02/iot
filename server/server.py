@@ -410,6 +410,29 @@ def process_logic(topic, data):
                 SYSTEM_STATE["stopwatch_running"] = True
                 run_stopwatch_tick()
 
+    # ==========================================
+    # LOGIKA ZA IR DALJINSKI I RGB SIJALICU 
+    # ==========================================
+    if topic == "Sensors/IR" and measurement == "IR_Remote":
+        # Mapiramo tastere sa daljinskog na boje
+        # Daljinski salje brojeve (1, 2, 3...) kao stringove
+        color_map = {
+            "1": "red",
+            "2": "green",
+            "3": "blue",
+            "4": "yellow",
+            "5": "purple",
+            "6": "light_blue",
+            "7": "white",
+            "0": "off"
+        }
+
+        button = str(value)
+        if button in color_map:
+            color = color_map[button]
+            print(f"[LOGIKA] Daljinski pritisnut: {button}. Menjam RGB na: {color}")
+            mqtt_client.publish("Commands/PI3/BRGB", json.dumps({"command": color}))
+
 def save_to_db(data):
     write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
     point = Point(data["measurement"]) \
