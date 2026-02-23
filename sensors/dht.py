@@ -17,6 +17,12 @@ class DHTSensor(object):
         if check == self.dht_lib.DHTLIB_OK:
             # Ako je citanje uspesno, vrati tuple (vlaznost, temperatura)
             return self.dht.humidity, self.dht.temperature
+        elif(check is self.dht.DHTLIB_ERROR_CHECKSUM): #data check has errors
+            print("DHTLIB_ERROR_CHECKSUM!!")
+            return None, None
+        elif(check is self.dht.DHTLIB_ERROR_TIMEOUT):  #reading DHT times out
+            print("DHTLIB_ERROR_TIMEOUT!")
+            return None, None
         else:
             # U slucaju greske (checksum, timeout), vracamo None
             return None, None
