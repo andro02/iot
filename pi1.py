@@ -137,10 +137,13 @@ def dus1_callback(distance):
                 create_payload(settings['DUS1'], "Distance", distance))
     # print(f"[DUS1] Dist: {distance:.2f} cm")
 
-def dpir1_callback(): 
-    add_to_batch("Sensors/DPIR1",
-                create_payload(settings['DPIR1'], "Motion", 1))
-    # print(f"[DPIR1] Motion Detected")
+def dpir1_callback(motion_state):
+    value = 1 if motion_state else 0
+    add_to_batch(
+        "Sensors/DPIR1",
+        create_payload(settings['DPIR1'], "Motion", value)
+    )
+    print(f"[DPIR1] Motion: {'Detected' if motion_state else 'Stopped'}")
 
 def dl_callback(state):
     add_to_batch("Actuators/DL",

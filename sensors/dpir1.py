@@ -10,10 +10,19 @@ class DPIR1(object):
         GPIO.setup(self.pin, GPIO.IN)
 
     def motion_detected(self, channel):
-        self.callback()
+        state = GPIO.input(self.pin)
+        if state == GPIO.HIGH:
+            self.callback(True)   # ima pokreta
+        else:
+            self.callback(False)  # nema pokreta
 
     def start_detecting(self):
-        GPIO.add_event_detect(self.pin, GPIO.RISING, callback=self.motion_detected, bouncetime=100)
+        GPIO.add_event_detect(
+            self.pin,
+            GPIO.BOTH,                
+            callback=self.motion_detected,
+            bouncetime=100
+        )
 
 def run_dpir1_loop(dpir1, stop_event):
     dpir1.start_detecting()

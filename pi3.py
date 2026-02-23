@@ -54,10 +54,11 @@ def publisher_task(event, batch_data, stop_event):
             pass
         event.clear()
 
-def dpir3_callback(): 
+def dpir3_callback(motion_state): 
+    value = 1 if motion_state else 0
     add_to_batch("Sensors/DPIR3", 
-                 create_payload(settings['DPIR3'], "Motion", 1))
-    print(f"[DPIR3] Motion Detected")
+                 create_payload(settings['DPIR3'], "Motion", value))
+    print(f"[DPIR3] Motion: {'Detected' if motion_state else 'Stopped'}")
 
 def dht_callback(humidity, temperature, event, cfg):
     if humidity is None or temperature is None:

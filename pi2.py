@@ -93,10 +93,13 @@ def dus2_callback(distance):
                  create_payload(settings['DUS2'], "Distance", distance))
     print(f"[DUS2] Dist: {distance:.2f} cm")
 
-def dpir2_callback(): 
-    add_to_batch("Sensors/DPIR2", 
-                 create_payload(settings['DPIR2'], "Motion", 1))
-    print(f"[DPIR2] Motion Detected")
+def dpir2_callback(motion_state): 
+    value = 1 if motion_state else 0
+    add_to_batch(
+        "Sensors/DPIR2",
+        create_payload(settings['DPIR2'], "Motion", value)
+    )
+    print(f"[DPIR2] Motion: {'Detected' if motion_state else 'Stopped'}")
 
 def dht_callback(humidity, temperature, event, cfg):
     # Slanje vlaznosti
