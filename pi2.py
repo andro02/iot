@@ -44,7 +44,7 @@ def add_to_batch(topic, payload):
     """ Dodaje payload u batch listu i proverava limit """
     global publish_data_counter
     with counter_lock:
-        batch.append((topic, json.dumps(payload), 0, True))
+        batch.append((topic, json.dumps(payload), 0, False))
         publish_data_counter += 1
     
     # Ako predjemo limit, saljemo signal publisher thread-u
@@ -123,9 +123,17 @@ def on_message(client, userdata, msg):
         payload = json.loads(msg.payload.decode('utf-8'))
         command = payload.get("command")
         
-        # Ovde cemo kasnije dodati logiku za 4SD stopericu
         if msg.topic == "Commands/PI2/4SD":
-            print(f"[4SD Command Received]: {command}")
+            if command == "show":
+                text = payload.get("text", "00:00")
+                if four_sd_device:
+                    four_sd_device.display_text(text)
+            elif command == "blink":
+                if four_sd_device:
+                    four_sd_device.blink("00:00")
+            elif command == "clear":
+                if four_sd_device:
+                    four_sd_device.clear()
             
     except Exception as e:
         print(f"Error handling MQTT command: {e}")
@@ -157,11 +165,15 @@ if __name__ == "__main__":
     run_gyro(settings['GSG'], threads, stop_event, gyro_callback)
 
     try:
-        print("PI2 pokrenut. Pritisni CTRL+C za izlaz.")
-        while True: time.sleep(1)
+        while not stop_event.is_set():
+            time.sleep(1)
     except KeyboardInterrupt:
         print('Stopping PI2...')
         stop_event.set()
-        for t in threads: 
+    finally:
+        for t in threads:
             t.join()
+
         mqtt_client.loop_stop()
+        mqtt_client.disconnect()
+        print("PI2 stopped.")

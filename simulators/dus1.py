@@ -13,7 +13,7 @@ def run_dus1_simulator(delay, callback, stop_event):
         distance += random.uniform(-2, 2)
         distance = max(0, min(300, distance))
 
-        callback(round(distance, 2))
+        callback(round(distance/3, 2))
 
         t += 1
         time.sleep(delay)
