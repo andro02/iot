@@ -13,6 +13,12 @@ from components.dpir1 import run_dpir1
 from components.dl import run_dl
 from components.db import run_db
 
+try:
+    import RPi.GPIO as GPIO
+    GPIO.setmode(GPIO.BCM)
+except:
+    pass
+
 HOSTNAME = "localhost" 
 PORT = 1883
 

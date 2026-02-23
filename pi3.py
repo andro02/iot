@@ -11,6 +11,12 @@ from components.bir import run_bir
 from components.brgb import run_brgb
 from components.lcd import run_lcd
 
+try:
+    import RPi.GPIO as GPIO
+    GPIO.setmode(GPIO.BCM)
+except:
+    pass
+
 HOSTNAME = "localhost" 
 PORT = 1883
 batch = []

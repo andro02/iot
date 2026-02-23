@@ -13,6 +13,12 @@ from components.btn import run_btn
 from components.dht import run_dht
 from components.gyro import run_gyro
 
+try:
+    import RPi.GPIO as GPIO
+    GPIO.setmode(GPIO.BCM)
+except:
+    pass
+
 HOSTNAME = "localhost" 
 PORT = 1883
 batch = []
