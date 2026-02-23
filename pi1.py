@@ -41,7 +41,7 @@ def add_to_batch(topic, payload):
     """ Dodaje payload u batch listu i proverava limit """
     global publish_data_counter
     with counter_lock:
-        batch.append((topic, json.dumps(payload), 0, True))
+        batch.append((topic, json.dumps(payload), 0, False))
         publish_data_counter += 1
     
     # Ako predjemo limit, saljemo signal publisher thread-u
@@ -77,6 +77,44 @@ def publisher_task(event, batch_data, stop_event):
         # Resetujemo event da bismo mogli ponovo da cekamo
         event.clear()
 
+# --- INPUT THREAD (Za testiranje) ---
+# def input_thread(dl_dev, db_dev, stop_event):
+#     dl_on = False
+#     db_on = False
+    
+#     print("\n---- KOMANDE (PI1) ----")
+#     print("'l': Toggle Light (DL)")
+#     print("'b': Toggle Buzzer (DB)")
+#     print("'x': Exit")
+#     print("-----------------------")
+
+#     while not stop_event.is_set():
+#         try:
+#             key = input().strip().lower()
+            
+#             if key == 'x':
+#                 stop_event.set()
+#                 break
+            
+#             elif key == 'l':
+#                 dl_on = not dl_on
+#                 dl_callback(dl_on) # Saljemo podatak i na server
+#                 if dl_dev: 
+#                     dl_dev.turn_on() if dl_on else dl_dev.turn_off()
+            
+#             elif key == 'b':
+#                 db_on = not db_on
+#                 db_callback(db_on) # Saljemo podatak i na server
+#                 if db_dev: 
+#                     db_dev.turn_on() if db_on else db_dev.turn_off()
+#             else:
+#                 if key: print(f"Nepoznata komanda: {key}")
+                
+#         except (KeyboardInterrupt, EOFError):
+#             print("\nStopping via Ctrl+C")
+#             stop_event.set()
+#             break
+
 # --- CALLBACKS ---
 def ds1_callback(val): 
     add_to_batch("Sensors/DS1", 
@@ -91,12 +129,12 @@ def dms_callback(key):
 def dus1_callback(distance): 
     add_to_batch("Sensors/DUS1",
                 create_payload(settings['DUS1'], "Distance", distance))
-    print(f"[DUS1] Dist: {distance:.2f} cm")
+    # print(f"[DUS1] Dist: {distance:.2f} cm")
 
 def dpir1_callback(): 
     add_to_batch("Sensors/DPIR1",
                 create_payload(settings['DPIR1'], "Motion", 1))
-    print(f"[DPIR1] Motion Detected")
+    # print(f"[DPIR1] Motion Detected")
 
 def dl_callback(state):
     add_to_batch("Actuators/DL",
@@ -165,11 +203,32 @@ if __name__ == "__main__":
     run_dpir1(settings['DPIR1'], threads, stop_event, dpir1_callback)
 
     try:
-        print("PI1 pokrenut. Pritisni CTRL+C za izlaz.")
-        while True: time.sleep(1)
+        while not stop_event.is_set():
+            time.sleep(1)
     except KeyboardInterrupt:
         print('Stopping PI1...')
         stop_event.set()
-        for t in threads: 
+    finally:
+        for t in threads:
             t.join()
+
         mqtt_client.loop_stop()
+        mqtt_client.disconnect()
+        print("PI1 stopped.")
+
+    # # OVAKOO za input_thread
+    
+    # in_thread = threading.Thread(target=input_thread, args=(dl_device, db_device, stop_event))
+    # in_thread.daemon = True
+    # in_thread.start()
+    # threads.append(in_thread)
+
+    # try:
+    #     for t in threads: 
+    #         t.join()
+    # except KeyboardInterrupt:
+    #     print('Stopping PI1...')
+    #     stop_event.set()
+    #     for t in threads: 
+    #         t.join()
+    #     mqtt_client.loop_stop()
