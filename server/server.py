@@ -246,6 +246,7 @@ def process_logic(topic, data):
     DISTANCE_THRESHOLD = 50.0 
     TIME_WINDOW = 5.0 # Vremenski prozor od 5s izmedju DUS i DPIR
 
+    # ////////////////////////////////////////////////////
     # LOGIKA ZA VRATA 1 (DUS1 i DPIR1)
     if topic == "Sensors/DUS1" and measurement == "Distance":
         if value < DISTANCE_THRESHOLD:
@@ -271,6 +272,7 @@ def process_logic(topic, data):
             SYSTEM_STATE["cooldowns"]["door_1"] = current_time
             print(f"[LOGIC] Osoba USLA kroz Vrata 1! Trenutno ljudi u kuci: {SYSTEM_STATE['people_count']}")
 
+    # ////////////////////////////////////////////////////
     # LOGIKA ZA VRATA 2 (DUS2 i DPIR2)
     if topic == "Sensors/DUS2" and measurement == "Distance":
         if value < DISTANCE_THRESHOLD:
@@ -293,12 +295,14 @@ def process_logic(topic, data):
             SYSTEM_STATE["cooldowns"]["door_2"] = current_time
             print(f"[LOGIC] Osoba USLA kroz Vrata 2! Trenutno ljudi u kuci: {SYSTEM_STATE['people_count']}")
 
+    # ////////////////////////////////////////////////////
     # ==========================================
-    # LOGIKA ZA TASTATURU (DMS)
+    # LOGIKA ZA DMS
     # ==========================================
     if topic == "Sensors/DMS" and measurement == "Key_Pressed":
         handle_dms_input(value)
     
+    # ////////////////////////////////////////////////////
     # LOGIKA ZA VRATA (DS1 i DS2) - ALARM 5 SEKUNDI            
     if measurement == "Door_Status":
         door_name = topic.split("/")[-1] # DS1 ili DS2
@@ -354,8 +358,9 @@ def process_logic(topic, data):
             sensor_name = topic.split("/")[-1]
             trigger_alarm(f"Pokret detektovan na {sensor_name} dok je kuca prazna!")
 
+    # ////////////////////////////////////////////////////
     # ==========================================
-    # LOGIKA ZA SLAVSKU IKONU (Ziroskop)
+    # LOGIKA ZA SLAVSKU IKONU (GSG)
     # ==========================================
     if topic == "Sensors/Gyro":
         try:
@@ -391,6 +396,7 @@ def process_logic(topic, data):
         else:
             SYSTEM_STATE["dht_readings"][sensor_name]["hum"] = value
 
+    # ////////////////////////////////////////////////////
     # ==========================================
     # LOGIKA ZA STOPERICU I DUGME (BTN)
     # ==========================================
@@ -410,12 +416,12 @@ def process_logic(topic, data):
                 SYSTEM_STATE["stopwatch_running"] = True
                 run_stopwatch_tick()
 
+    # ////////////////////////////////////////////////////
     # ==========================================
     # LOGIKA ZA IR DALJINSKI I RGB SIJALICU 
     # ==========================================
     if topic == "Sensors/IR" and measurement == "IR_Remote":
-        # Mapiramo tastere sa daljinskog na boje
-        # Daljinski salje brojeve (1, 2, 3...) kao stringove
+        # mapiramo tastere sa daljinskog na bojel; salje brojeve (1, 2, 3...) kao stringove
         color_map = {
             "1": "red",
             "2": "green",
@@ -513,6 +519,43 @@ def retrieve_aggregate_data():
     |> filter(fn: (r) => r._measurement == "Humidity")
     |> mean()"""
     return handle_influx_query(query)
+
+# ////////////////////////////////////////////////////
+
+# Rutiranje za gasenje alarma preko Web aplikacije
+@app.route('/api/alarm/deactivate', methods=['POST'])
+def api_alarm_deactivate():
+    try:
+        data = request.get_json()
+        pin = data.get("pin", "")
+        
+        # Specifikacija kaze da se iz ALARM stanja izlazi unosom PIN-a na DMS-u ili Web app
+        if pin == SECRET_PIN:
+            if SYSTEM_STATE["alarm_active"]:
+                deactivate_alarm()
+            SYSTEM_STATE["security_armed"] = False
+            
+            # Ponistavamo tajmer za uljeza ako je aktivan
+            if SYSTEM_STATE["intrusion_timer"]:
+                SYSTEM_STATE["intrusion_timer"].cancel()
+                SYSTEM_STATE["intrusion_timer"] = None
+                
+            return jsonify({"status": "success", "message": "Alarm and Security Deactivated"})
+        else:
+            return jsonify({"status": "error", "message": "Invalid PIN"}), 403
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+# Ruta za povlacenje trenutnog stanja sistema (za iscrtavanje na Webu)
+@app.route('/api/status', methods=['GET'])
+def api_status():
+    return jsonify({
+        "alarm_active": SYSTEM_STATE["alarm_active"],
+        "security_armed": SYSTEM_STATE["security_armed"],
+        "people_count": SYSTEM_STATE["people_count"],
+        "stopwatch_time": SYSTEM_STATE["stopwatch_time"],
+        "btn_add_seconds": SYSTEM_STATE["btn_add_seconds"]
+    })
 
 
 if __name__ == '__main__':
