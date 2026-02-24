@@ -27,6 +27,15 @@ class BRGB(object):
             GPIO.output(self.GREEN_PIN, GPIO.HIGH)
         elif color == "blue":
             GPIO.output(self.BLUE_PIN, GPIO.HIGH)
+        elif color == "yellow":
+            GPIO.output(self.RED_PIN, GPIO.HIGH)
+            GPIO.output(self.GREEN_PIN, GPIO.HIGH)
+        elif color == "purple":
+            GPIO.output(self.RED_PIN, GPIO.HIGH)
+            GPIO.output(self.BLUE_PIN, GPIO.HIGH)
+        elif color == "light_blue":
+            GPIO.output(self.GREEN_PIN, GPIO.HIGH)
+            GPIO.output(self.BLUE_PIN, GPIO.HIGH)
         elif color == "white":
             GPIO.output(self.RED_PIN, GPIO.HIGH)
             GPIO.output(self.GREEN_PIN, GPIO.HIGH)
