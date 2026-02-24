@@ -521,21 +521,55 @@ def retrieve_aggregate_data():
     return handle_influx_query(query)
 
 # ////////////////////////////////////////////////////
+# komande za RGB sijalicu saweba
+@app.route('/api/rgb', methods=['POST'])
+def api_rgb():
+    try:
+        data = request.get_json()
+        color = data.get("color", "off")
+        # Saljemo komandu na PI3
+        mqtt_client.publish("Commands/PI3/BRGB", json.dumps({"command": color}))
+        return jsonify({"status": "success", "color": color})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
-# Rutiranje za gasenje alarma preko Web aplikacije
+# komande za stopericu sa weba
+@app.route('/api/stopwatch', methods=['POST'])
+def api_stopwatch():
+    try:
+        data = request.get_json()
+        action = data.get("action")
+        
+        if action == "set_time":
+            time_in_seconds = int(data.get("time", 0))
+            SYSTEM_STATE["stopwatch_time"] = time_in_seconds
+            
+            # Pokrecemo stopericu ako nije vec pokrenuta
+            if not SYSTEM_STATE["stopwatch_running"] and time_in_seconds > 0:
+                SYSTEM_STATE["stopwatch_running"] = True
+                run_stopwatch_tick()
+                
+        elif action == "set_n":
+            SYSTEM_STATE["btn_add_seconds"] = int(data.get("n", 10))
+            
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+# za gasenje alarma preko weba
 @app.route('/api/alarm/deactivate', methods=['POST'])
 def api_alarm_deactivate():
     try:
         data = request.get_json()
         pin = data.get("pin", "")
         
-        # Specifikacija kaze da se iz ALARM stanja izlazi unosom PIN-a na DMS-u ili Web app
+        # iz ALARM stanja izlazimo unosom PIN-a na DMS-u ili sa weba
         if pin == SECRET_PIN:
             if SYSTEM_STATE["alarm_active"]:
                 deactivate_alarm()
             SYSTEM_STATE["security_armed"] = False
             
-            # Ponistavamo tajmer za uljeza ako je aktivan
+            # ponistavamo tajmer za uljeza ako je aktivan
             if SYSTEM_STATE["intrusion_timer"]:
                 SYSTEM_STATE["intrusion_timer"].cancel()
                 SYSTEM_STATE["intrusion_timer"] = None
@@ -546,7 +580,7 @@ def api_alarm_deactivate():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
-# Ruta za povlacenje trenutnog stanja sistema (za iscrtavanje na Webu)
+# za trenutno stanje sistema
 @app.route('/api/status', methods=['GET'])
 def api_status():
     return jsonify({
