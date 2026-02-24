@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Kontrolna Tabla</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Smart Home IoT Sistem</h1>
+        <div class="global-status">
+            <span id="status-people">Ljudi u kuci: 0</span>
+            <span id="status-alarm" class="status-safe">Sistem bezbedan</span>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        
+        <section class="card">
+            <h2>Uzivo Kamera (PI1)</h2>
+            <div class="camera-container"> 
+                <!-- za src ip pi1 -->
+                <img id="camera-feed" src="http://192.168.X.X:8080/?action=stream" alt="Kamera nije povezana">
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Bezbednost i Alarm</h2>
+            <p id="alarm-text">Sistem je trenutno deaktiviran.</p>
+            <div class="input-group">
+                <input type="password" id="pin-input" placeholder="Unesite PIN" maxlength="4">
+                <button onclick="deactivateAlarm()">Deaktiviraj</button>
+            </div>
+            <p id="security-message"></p>
+        </section>
+
+        <section class="card">
+            <h2>RGB Osvetljenje (PI3)</h2>
+            <div class="color-buttons">
+                <button class="color-btn red" onclick="setRGB('red')">Crvena</button>
+                <button class="color-btn green" onclick="setRGB('green')">Zelena</button>
+                <button class="color-btn blue" onclick="setRGB('blue')">Plava</button>
+                <button class="color-btn white" onclick="setRGB('white')">Bela</button>
+                <button class="color-btn off" onclick="setRGB('off')">Iskljuci</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Kuhinjska Stoperica (PI2)</h2>
+            <p class="timer-display">Trenutno vreme: <span id="timer-val">00:00</span></p>
+            
+            <div class="input-group">
+                <input type="number" id="timer-input" placeholder="Sekunde (npr. 120)">
+                <button onclick="setStopwatchTime()">Postavi vreme</button>
+            </div>
+            <div class="input-group" style="margin-top: 10px;">
+                <input type="number" id="n-input" placeholder="Dodaj N (npr. 10)">
+                <button onclick="setStopwatchN()">Postavi N</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- from=now-5m&to=now&refresh=5s -->
+
+    <h2 class="section-title">Analitika Sistema (Grafana)</h2>
+    <section class="grafana-grid">
+        
+        <div class="grafana-panel">
+            <h3>Temperatura (DHT)</h3>
+            <iframe src="http://localhost:3000/d-solo/ad8tlz6/dhts-temperature?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Vlaznost (DHT)</h3>
+            <iframe src="http://localhost:3000/d-solo/adw8fxn/dhts-humidity?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Senzori Udaljenosti (DUS)</h3>
+            <iframe src="http://localhost:3000/d-solo/adlm8rm/duss?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Senzori Pokreta (DPIR)</h3>
+            <iframe src="http://localhost:3000/d-solo/add5gr2/dpirs?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Senzori Vrata (DS)</h3>
+            <iframe src="http://localhost:3000/d-solo/ad8lz5b/ds1-ds2-btn?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&refresh=10s&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Kuhinjsko Dugme (BTN)</h3>
+            <iframe src="http://localhost:3000/d-solo/ad8gk5c/kbtn?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Logovi Sistema DMS</h3>
+            <iframe src="http://localhost:3000/d-solo/advqnkv/dms?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Logovi Sistema IR</h3>
+            <iframe src="http://localhost:3000/d-solo/ad2d4z9/ir?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Logovi Sistema RGB</h3>
+            <iframe src="http://localhost:3000/d-solo/ad74fbf/brgb?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Svetlo DL</h3>
+            <iframe src="http://localhost:3000/d-solo/adt8thw/dl?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&showCategory=Thresholds&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Zujalica DB</h3>
+            <iframe src="http://localhost:3000/d-solo/adcvchf/db?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Ziroskop Ubrzanje</h3>
+            <iframe src="http://localhost:3000/d-solo/adgq5pq/gsg-acceleration?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>Ziroskop Ubrzanje i Rotacija</h3>
+            <iframe src="http://localhost:3000/d-solo/adjf4mf/gsg-rotation?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+        <div class="grafana-panel">
+            <h3>LCD Ispisi</h3>
+            <iframe src="http://localhost:3000/d-solo/advjd7s/lcd?orgId=1&from=now-5m&to=now&refresh=5s&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true" width="100%" height="250" frameborder="0"></iframe>
+        </div>
+
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>

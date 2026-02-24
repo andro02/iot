@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
-from flask import render_template # Opciono, ako ces servirati HTML direktno
-from flask_cors import CORS # Ako HTML otvaras kao obican fajl, treba ti CORS. Dodaj CORS(app) gore ispod app = Flask(__name__)
+from flask import render_template
+from flask_cors import CORS
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 import paho.mqtt.client as mqtt
@@ -10,7 +10,7 @@ import time
 import ast
 
 app = Flask(__name__)
-CORS(app) #?????
+CORS(app)
 
 # --- INFLUXDB SETUP ---
 token = "B8HDBR5Sh9cCibUUGyUAM2rDL4ajESUs_UyUHpRp52OT3mL1IriRtRCD2cnnix-09BGs1_OU9xv9HMNXnWDSGg=="

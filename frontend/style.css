@@ -1,0 +1,160 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #121212;
+    color: #ffffff;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #333;
+}
+
+.global-status span {
+    margin-left: 20px;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.status-safe { background-color: #2e7d32; }
+.status-danger { background-color: #c62828; animation: blink 1s infinite; }
+
+@keyframes blink {
+    50% { opacity: 0.5; }
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.card h2 {
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    color: #90caf9;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+.section-title {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    color: #90caf9;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.grafana-grid {
+    display: grid;
+    /* Automatski prilagodjava broj kolona zavisno od sirine ekrana */
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.grafana-panel {
+    background-color: #1e1e1e;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.grafana-panel h3 {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: #e0e0e0;
+    text-align: center;
+}
+
+.grafana-panel iframe {
+    flex-grow: 1;
+    border-radius: 5px;
+    background-color: #121212;
+    max-width: 100%;
+}
+
+.camera-container img {
+    width: 100%;
+    border-radius: 5px;
+    border: 2px solid #333;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #333;
+    color: white;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #1976d2;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #1565c0;
+}
+
+.color-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.color-btn { flex: 1; min-width: 80px; }
+.color-btn.red { background-color: #d32f2f; }
+.color-btn.green { background-color: #388e3c; }
+.color-btn.blue { background-color: #1976d2; }
+.color-btn.white { background-color: #e0e0e0; color: #000; }
+.color-btn.off { background-color: #424242; }
+
+.timer-display {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+#timer-val {
+    font-weight: bold;
+    color: #ffb300;
+}
+
+#security-message {
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
